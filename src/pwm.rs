@@ -11,24 +11,53 @@ use crate::rcc::Rcc;
 use crate::time::Hertz;
 use cast::{u16, u32};
 
-#[cfg(any(feature = "stm32l0x2", feature = "stm32l0x3"))]
+#[cfg(not(any(
+    feature = "tssop14",
+    feature = "tssop20",
+    feature = "ufqfpn20",
+    feature = "ufqfpn28",
+    feature = "wlcsp25",
+    feature = "wlcsp36",
+)))]
 use crate::gpio::{
     gpioa::{PA15, PA5},
     gpiob::{PB10, PB11, PB3},
 };
 
-#[cfg(feature = "io-STM32L071")]
+#[cfg(all(
+    feature = "io-STM32L071",
+    not(any(
+        feature = "tssop14",
+        feature = "tssop20",
+        feature = "ufqfpn20",
+        feature = "ufqfpn28",
+        feature = "wlcsp25",
+        feature = "wlcsp36",
+    ))
+))]
 use crate::gpio::{
     gpioa::{PA6, PA7},
     gpiob::{PB0, PB1, PB4, PB5},
 };
 
-#[cfg(feature = "io-STM32L071")]
-use crate::gpio::{
-    gpioc::{PC6, PC7, PC8, PC9},
-    gpioe::{PE10, PE11, PE12, PE3, PE4, PE5, PE6, PE9},
-};
+#[cfg(all(
+    feature = "io-STM32L071",
+    any(
+        feature = "lqfp64",
+        feature = "ufbga64",
+        feature = "tfbga64",
+        feature = "wlcsp49",
+        feature = "lqfp100",
+        feature = "ufbg100",
+    )
+))]
+use crate::gpio::gpioc::{PC6, PC7, PC8, PC9};
 
+#[cfg(all(
+    feature = "io-STM32L071",
+    any(feature = "lqfp100", feature = "ufbg100",)
+))]
+use crate::gpio::gpioe::{PE10, PE11, PE12, PE3, PE4, PE5, PE6, PE9};
 pub struct Timer<I> {
     instance: I,
 
@@ -289,6 +318,7 @@ macro_rules! impl_pin {
     }
 }
 
+// All families and packages expose these channels on TIM2
 impl_pin!(
     TIM2: (
         PA0, C1, AF2;
@@ -298,7 +328,15 @@ impl_pin!(
     )
 );
 
-#[cfg(any(feature = "stm32l0x2", feature = "stm32l0x3"))]
+/// These TIM2 output channels are available on all but the smallest packages
+#[cfg(not(any(
+    feature = "tssop14",
+    feature = "tssop20",
+    feature = "ufqfpn20",
+    feature = "ufqfpn28",
+    feature = "wlcsp25",
+    feature = "wlcsp36",
+)))]
 impl_pin!(
     TIM2: (
         PA5,  C1, AF5;
@@ -309,8 +347,28 @@ impl_pin!(
     )
 );
 
+#[cfg(any(feature = "lqfp100", feature = "ufbg100",))]
+impl_pin!(
+    TIM2: (
+        PE9,  C1, AF0;
+        PE10, C2, AF0;
+        PE11, C3, AF0;
+        PE12, C4, AF0;
+    )
+);
+
 // Only category 5 devices have TIM3
-#[cfg(feature = "io-STM32L071")]
+#[cfg(all(
+    feature = "io-STM32L071",
+    not(any(
+        feature = "tssop14",
+        feature = "tssop20",
+        feature = "ufqfpn20",
+        feature = "ufqfpn28",
+        feature = "wlcsp25",
+        feature = "wlcsp36",
+    ))
+))]
 impl_pin!(
     TIM3: (
         PA6, C1, AF2;
@@ -322,19 +380,32 @@ impl_pin!(
     )
 );
 
-#[cfg(feature = "io-STM32L071")]
-impl_pin!(
-    TIM2: (
-        PE9,  C1, AF0;
-        PE10, C2, AF0;
-        PE11, C3, AF0;
-        PE12, C4, AF0;
+#[cfg(all(
+    feature = "io-STM32L071",
+    any(
+        feature = "lqfp64",
+        feature = "ufbga64",
+        feature = "tfbga64",
+        feature = "wlcsp49",
+        feature = "lqfp100",
+        feature = "ufbg100",
     )
+))]
+impl_pin!(
     TIM3: (
         PC6, C1, AF2;
         PC7, C2, AF2;
         PC8, C3, AF2;
         PC9, C4, AF2;
+    )
+);
+
+#[cfg(all(
+    feature = "io-STM32L071",
+    any(feature = "lqfp100", feature = "ufbg100",)
+))]
+impl_pin!(
+    TIM3: (
         PE3, C1, AF2;
         PE4, C2, AF2;
         PE5, C3, AF2;
